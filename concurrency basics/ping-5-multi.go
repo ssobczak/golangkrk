@@ -13,11 +13,11 @@ type Ball struct{}
 
 func player(number int, left_table chan Ball, right_table chan Ball) {
 	ball := <-left_table
-	// fmt.Printf("Player %d\n", number)
+	fmt.Printf("Player %d\n", number)
 	right_table <- ball
 }
 
-const TABLES = 10e5
+const TABLES = 10
 
 func main() {
 	t := time.Now()
