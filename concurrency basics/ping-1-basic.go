@@ -22,6 +22,8 @@ func main() {
 
 	<-table
 	fmt.Println("Game over...")
+
+	panic("print stack")
 }
 
 func player(name string, table chan Ball) {
