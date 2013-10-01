@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func GetDistance(what, uniprot_id string) int {
+func GetDistance(uniprot_id, what string) int {
 	return distance(what, fetch(uniprot_id))
 }
 
