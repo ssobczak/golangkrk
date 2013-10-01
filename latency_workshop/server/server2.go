@@ -2,14 +2,12 @@
 // Licensed under the MIT license: http://opensource.org/licenses/MIT
 // The above copyright notice shall be included in all copies or substantial portions of the Software.
 
-// http://pastebin.com/kxjCc8Se
-
 package main
 
 import (
 	"encoding/json"
 	"fmt"
-	// "github.com/deckarep/golang-set"
+	"github.com/deckarep/golang-set"
 	"github.com/ssobczak/golangkrk/latency_workshop/distance"
 	"log"
 	"net/http"
@@ -51,21 +49,49 @@ type scored struct {
 	Distance int
 }
 
+func get_distance_async(id, sequence string, responses chan scored) {
+	responses <- scored{id, distance.GetDistance(id, sequence)}
+}
+
 func score(ids []string, sequence string) map[string]int {
 	responses := make(chan scored)
-	defer close(responses)
+	to_score := mapset.NewSet()
 
 	for _, id := range ids {
-		go func(id string) {
-			responses <- scored{id, distance.GetDistance(id, sequence)}
-		}(id)
+		to_score.Add(id)
+		go get_distance_async(id, sequence, responses)
 	}
 
 	result := make(map[string]int)
-	for _ = range ids {
+	for to_read := len(ids); to_read != 0; to_read-- {
 		resp := <-responses
 		result[resp.Id] = resp.Distance
+
+		to_score.Remove(resp.Id)
+		if to_score.Size() == len(ids)/5 {
+			to_read += to_score.Size()
+			go add_duplicates(to_score.Clone(), sequence, responses)
+		}
+
+		if to_score.Size() == 0 {
+			go cleanup(to_read, responses)
+			break
+		}
 	}
 
 	return result
+}
+
+func add_duplicates(duplicated mapset.Set, sequence string, responses chan scored) {
+	for id, _ := range duplicated {
+		str_id, _ := id.(string)
+		go get_distance_async(str_id, sequence, responses)
+	}
+}
+
+func cleanup(to_read int, responses chan scored) {
+	for i := 0; i != to_read-1; i++ {
+		<-responses
+	}
+	close(responses)
 }
