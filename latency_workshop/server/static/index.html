@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+	</head>
+	<body>
+		<div class="row">
+  			<div class="col-md-4 col-md-offset-2" style="text-align: center; margin-top: 10px; margin-bottom: 20px">
+  				<h2>#yolo #swag</h2>
+  			</div>
+  		</div>
+
+		<div class="row">
+  			<div class="col-md-4 col-md-offset-2">
+				<form id="search-form">
+					<div class="form-group">
+						<label for="sequence">Sequence to find</label>
+						<input type="text" class="form-control" id="sequence" value="MKAIVFAYHDIGCVGLNALAEAGYDIQAVFTHTDNPGENRFFSSVARVAADLALPVFAPE">
+					</div>
+					<div class="form-group">
+						<label for="ids">Protein IDs</label>
+						<textarea  id="ids" class="form-control" rows="6">Q9HY63
+Q2NRV7
+Q8D341
+A1JPN5
+A7FHH4
+Q1C742
+B2K5L3
+Q8ZDX8
+A9R093
+Q1CIH7
+A4TIM4
+Q93PD8
+B1JJ30
+A0KGY8
+A4SQW7
+A7ZP71
+B7UFR5
+B7MG20
+B7LAR8
+Q7AC24
+B5YX44
+B7NNT2
+B7MXT4
+B7M5T5
+C4ZU95
+B1X8W6
+A8A2C0</textarea>
+					</div>
+					<button type="submit" class="btn btn-default pull-right">Submit</button>
+				</form>
+			</div>
+  			<div class="col-md-4" id="protein"></div>
+		</div>
+
+		<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+		<script>
+			$(function() {
+			    $("#search-form").submit(function(event) {
+	      			event.preventDefault();
+
+	      			$.post("/find", { 
+	      				sequence: $('#sequence').val(), 
+	      				ids: $("#ids").val() 
+	      			}).done(function (data) {
+	      				var tbody = $("<tbody/>")
+
+	      				var res = $.map(JSON.parse(data), function(dist, id) { 
+	      					return {id: id, dist: dist} }
+	      				)
+
+	      				res.sort(function(a, b) { return a.dist - b.dist })
+
+					    $.each(res, function (i, row) {
+					    	$("<tr><td><a href='http://www.uniprot.org/uniprot/" + row.id + ".fasta'>" + row.id + "</a></td><td>" + row.dist + "</td></tr>").appendTo(tbody)
+					    });
+
+      					var table = $("<table class='table table-hover table-condensed'></table>")
+      					$("<thead><tr><th>Protein ID</th><th>Distance</th></tr></thead>").appendTo(table)
+      					tbody.appendTo(table)
+
+      					$("#protein").empty()
+      					table.appendTo($("#protein"))
+					}); 
+	      		});
+			});
+		</script>
+	</body>
+</html>
